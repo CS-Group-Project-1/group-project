@@ -1,32 +1,54 @@
-#in this section there are some very preliminary things that we could use 
-#to display the results of the analyses; we will have to / could create a table;
-#also, we will definitely have to create a graph
-#basically here I just wrote some notes in a very draft-like form to start consider 
-#how we could develop this
 
 
 
-#we create a function to evaluate if the percentage change in the value of the coin 
-#surpasses the threshold or not
-def check_threshold(initial_value, end_value, percentage_threshold):
-    percentage_change = ((end_value - initial_value) / initial value) * 100
-    if percentage_change > percentage_threshold:
-        print("The percentage change in the value of the coin surpasses the selected threshold")
-    elif percentage_change < percentage_threshold:
-        print("The percentage change in the value of the coin is smaller than the selected threshold")
-    else:
-        print("The percentage change in the value of the coin is equal to the threshold")
-# I am not sure whether this function is completely correct, I chose initial_value & end_value just to have an idea about how to set up 
-#the formula; we would probably have to insert some variable names depending on the rest of the code that handles input from the API etc.
+
+#necessary imports (we might have to eliminate this when we unify all code)
+import streamlit as st
+import pandas as pd
 
 
 
-#the following serves to display the results in a functional table format
-#st.write("Results for coin:", coin_selection)
-#st.table() 
-# #FIGURE OUT WHICH PARAMETERS THERE ARE IN THE TABLE --> WHICH DATAFRAME TO USE?); 
-# --> ADD COIN SYMBOL, PERCENTAGE CHANGE, THEN THRESHOLD MET OR NOT --> use check_threshold function, 
-# ADD COLOR CODING)
+#we simulate an example data frame 
+coin_results = {
+    'coins':coins,
+    'initial_value':[30000, 3000, 2000, 4000,  4500],
+    'end_value':[31000, 3500, 2900, 4000, 4300]
+}
 
-#WE ALSO NEED TO CREATE SOME DATA VISUALIZATION, BUT WITH WHAT? 
-#use for example st.line_chart() to create graph
+df = pd.DataFrame(coin_results)
+
+#now we calculate the percentage change in the value of the coin and add it as a column to the dataframe
+
+df['percentage_change'] = ((df['end_value']-df['initial_value']) / df['initial_value'])*100
+
+#add another column that says whether percentage threshold has been surpassed
+#met means that the percentage change has NOT surpassed the threshold; 
+#not met means that the percentage change has been surpassed
+
+def check_threshold():
+    if df['percentage_change'] <= threshold:
+        print("Met")
+    elif df['percentage_change'] > threshold:
+        print("Not met")
+   
+
+df['percentage_threshold_criteria'] = check_threshold()
+
+
+
+#we define the function that will allow to color code column that evaluates whether threshold has 
+#been met or not
+
+def background_color(r):
+    color = 'background-color: green' if r else 'red'
+    return f'background-color:{color}'
+
+#now format the dataframe
+df_colors = df.style.map(background_color, subset=['percentage_threshold_criteria'])
+
+
+#allowing streamlit to display the result
+st.write("Results of the analysis for your selected coin(s)")
+st.dataframe(df)
+
+#later, we will also have to create a graph --> we could use st.line_chart
