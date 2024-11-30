@@ -1,11 +1,16 @@
 import streamlit as st
+import pandas as pd
 from utils import fetch_historical_data, calculate_percentage_change, plot_candlestick
 
+# Function to handle coin search and analysis
 def show_coin_search():
     """
-    Displays the coin search page where users can select a coin,
+    This function displays the coin search page.
+    It allows users to select a cryptocurrency, 
     set analysis parameters, and view the results.
     """
+    
+    # Title for the search page
     st.title("Coin Search and Analysis")
 
     # Dropdown to select the cryptocurrency
@@ -44,3 +49,14 @@ def show_coin_search():
             plot_candlestick(historical_data, coin, interval)
         else:
             st.error(f"Failed to fetch data for {coin}. Please try again later.")
+
+    # Feedback section
+    st.markdown("---")
+    st.subheader("What do you think about this coin?")
+    col1, col2 = st.columns(2)
+    if col1.button("👍 Like"):
+        st.session_state["feedback"] = {"coin": coin, "liked": 1}
+        st.success("Thank you for your feedback!")
+    if col2.button("👎 Dislike"):
+        st.session_state["feedback"] = {"coin": coin, "liked": 0}
+        st.success("Thank you for your feedback!")
