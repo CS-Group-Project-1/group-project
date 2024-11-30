@@ -38,6 +38,7 @@ def show_feedback_page():
                 # Remove the coin from the feedback data
                 st.session_state["feedback_data"] = feedback_data[feedback_data["coin"] != coin]
                 save_feedback_data()
+                st.rerun()  # Use st.rerun() to refresh the page
     else:
         st.info("No liked coins yet. Add one below!")
 
@@ -51,6 +52,7 @@ def show_feedback_page():
                 # Remove the coin from the feedback data
                 st.session_state["feedback_data"] = feedback_data[feedback_data["coin"] != coin]
                 save_feedback_data()
+                st.rerun()  # Use st.rerun() to refresh the page
     else:
         st.info("No disliked coins yet. Add one below!")
 
@@ -69,6 +71,7 @@ def show_feedback_page():
             st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
             save_feedback_data()
             st.success(f"{new_coin} added to Liked Coins!")
+            st.rerun()  # Use st.rerun() to refresh the page
         else:
             st.error("Please enter a valid coin symbol!")
 
@@ -83,6 +86,7 @@ def show_feedback_page():
             st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
             save_feedback_data()
             st.success(f"{new_coin} added to Disliked Coins!")
+            st.rerun()  # Use st.rerun() to refresh the page
         else:
             st.error("Please enter a valid coin symbol!")
 
