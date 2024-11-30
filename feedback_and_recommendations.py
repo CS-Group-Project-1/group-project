@@ -1,113 +1,107 @@
 import streamlit as st
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
+import os
 
-# Function to display the feedback and recommendation page
 def show_feedback_page():
     """
-    This function handles user feedback collection and provides coin recommendations
-    based on the user's preferences using a Machine Learning model.
+    Displays the Feedback and Recommendations page.
+    Users can view and manage liked/disliked coins and get recommendations.
     """
+    st.title("Feedback & Recommendations")
 
-    st.title("Feedback and Recommendations")
-    
-    # Step 1: Collect user feedback
-    st.header("Provide Feedback")
-    st.markdown("""
-        After analyzing coins, let us know what you think about them. 
-        Your feedback will help us improve recommendations tailored to your preferences.
-    """)
-
-    # Simulate a feedback scenario (you can replace this with actual coin data)
-    coin = st.selectbox("Select a coin to provide feedback", ["BTC", "ETH", "SOL", "ADA", "XRP"])
-    
-    # Like or Dislike buttons
-    feedback_col1, feedback_col2 = st.columns(2)
-    if feedback_col1.button("👍 Like"):
-        save_feedback(coin, liked=1)
-        st.success(f"Thanks for liking {coin}!")
-    if feedback_col2.button("👎 Dislike"):
-        save_feedback(coin, liked=0)
-        st.success(f"Thanks for your feedback on {coin}!")
-
-    st.markdown("---")
-
-    # Step 2: Train and Display Recommendations
-    st.header("Recommended Coins")
-    recommendations = get_recommendations()
-    if recommendations is not None:
-        st.write("Based on your feedback, you might like these coins:")
-        for idx, rec in enumerate(recommendations):
-            st.write(f"{idx + 1}. {rec}")
-    else:
-        st.info("Not enough feedback data yet to generate recommendations. Start by liking or disliking coins!")
-        
-
-# Function to save user feedback into a CSV file
-def save_feedback(coin, liked):
-    """
-    Saves user feedback to a CSV file.
-
-    Parameters:
-        coin (str): The coin for which feedback is provided (e.g., 'BTC').
-        liked (int): Feedback value (1 for Like, 0 for Dislike).
-    """
-    feedback_file = "feedback.csv"
-    new_feedback = {"coin": coin, "liked": liked}
-
-    # Check if the file already exists
-    try:
-        if feedback_file in st.session_state:
-            feedback_data = st.session_state[feedback_file]
+    # Initialize session state for feedback data
+    if "feedback_data" not in st.session_state:
+        feedback_file = "feedback.csv"
+        if os.path.exists(feedback_file):
+            feedback_data = pd.read_csv(feedback_file).dropna()
         else:
-            feedback_data = pd.read_csv(feedback_file)
-    except FileNotFoundError:
-        # If no file exists yet, create a new DataFrame
-        feedback_data = pd.DataFrame(columns=["coin", "liked"])
+            feedback_data = pd.DataFrame(columns=["coin", "liked"])
+        st.session_state["feedback_data"] = feedback_data
 
-    # Append the new feedback
-    feedback_data = feedback_data.append(new_feedback, ignore_index=True)
-    feedback_data.to_csv(feedback_file, index=False)
+    # Function to save feedback data to the CSV file
+    def save_feedback_data():
+        feedback_file = "feedback.csv"
+        st.session_state["feedback_data"].to_csv(feedback_file, index=False)
 
-    # Save the feedback in session state for real-time updates
-    st.session_state[feedback_file] = feedback_data
+    # Separate liked and disliked coins
+    feedback_data = st.session_state["feedback_data"]
+    liked_coins = feedback_data[feedback_data["liked"] == 1]["coin"].tolist()
+    disliked_coins = feedback_data[feedback_data["liked"] == 0]["coin"].tolist()
+
+    # Display liked coins
+    st.subheader("Liked Coins")
+    if liked_coins:
+        for coin in liked_coins:
+            col1, col2 = st.columns([8, 2])
+            col1.write(coin)
+            if col2.button("❌ Remove", key=f"remove_liked_{coin}"):
+                # Remove the coin from the feedback data
+                st.session_state["feedback_data"] = feedback_data[feedback_data["coin"] != coin]
+                save_feedback_data()
+    else:
+        st.info("No liked coins yet. Add one below!")
+
+    # Display disliked coins
+    st.subheader("Disliked Coins")
+    if disliked_coins:
+        for coin in disliked_coins:
+            col1, col2 = st.columns([8, 2])
+            col1.write(coin)
+            if col2.button("❌ Remove", key=f"remove_disliked_{coin}"):
+                # Remove the coin from the feedback data
+                st.session_state["feedback_data"] = feedback_data[feedback_data["coin"] != coin]
+                save_feedback_data()
+    else:
+        st.info("No disliked coins yet. Add one below!")
+
+    # Add new coins
+    st.subheader("Add Coins to Liked or Disliked List")
+    new_coin = st.text_input("Enter the coin symbol (e.g., BTC, ETH):").strip().upper()
+
+    if st.button("👍 Add to Liked Coins"):
+        if new_coin in liked_coins:
+            st.warning(f"{new_coin} is already in the Liked Coins list!")
+        elif new_coin in disliked_coins:
+            st.warning(f"{new_coin} is already in the Disliked Coins list!")
+        elif new_coin:
+            # Add to liked coins
+            new_row = pd.DataFrame({"coin": [new_coin], "liked": [1]})
+            st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
+            save_feedback_data()
+            st.success(f"{new_coin} added to Liked Coins!")
+        else:
+            st.error("Please enter a valid coin symbol!")
+
+    if st.button("👎 Add to Disliked Coins"):
+        if new_coin in disliked_coins:
+            st.warning(f"{new_coin} is already in the Disliked Coins list!")
+        elif new_coin in liked_coins:
+            st.warning(f"{new_coin} is already in the Liked Coins list!")
+        elif new_coin:
+            # Add to disliked coins
+            new_row = pd.DataFrame({"coin": [new_coin], "liked": [0]})
+            st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
+            save_feedback_data()
+            st.success(f"{new_coin} added to Disliked Coins!")
+        else:
+            st.error("Please enter a valid coin symbol!")
+
+    # Recommendations based on liked coins
+    st.subheader("Recommendations")
+    if liked_coins:
+        st.write("Based on your liked coins, you might like these:")
+        recommendations = generate_recommendations(liked_coins)
+        for rec in recommendations:
+            st.write(f"- {rec}")
+    else:
+        st.info("Like some coins to get recommendations!")
 
 
-# Function to get recommendations based on user feedback
-def get_recommendations():
+def generate_recommendations(liked_coins):
     """
-    Trains a simple ML model using user feedback and provides recommendations.
-
-    Returns:
-        list: A list of recommended coins (or None if insufficient data).
+    Generates recommendations based on the liked coins.
+    This is a placeholder function that suggests other coins.
     """
-    feedback_file = "feedback.csv"
-    try:
-        # Load feedback data
-        feedback_data = pd.read_csv(feedback_file)
-        if feedback_data.shape[0] < 5:  # Ensure enough data points to train a model
-            return None
-
-        # Feature engineering: Create dummy variables for coins
-        feature_data = pd.get_dummies(feedback_data["coin"])
-        X = feature_data  # Features are the dummy variables for coins
-        y = feedback_data["liked"]  # Target is the feedback (1 = Like, 0 = Dislike)
-
-        # Train-test split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-        # Train a simple Logistic Regression model
-        model = LogisticRegression()
-        model.fit(X_train, y_train)
-
-        # Predict recommendations
-        coin_probabilities = model.predict_proba(X_test)[:, 1]  # Get probabilities of "like"
-        recommended_coins = X_test.columns[coin_probabilities.argsort()[-3:][::-1]]  # Top 3 coins
-
-        return recommended_coins.tolist()
-
-    except Exception as e:
-        print(f"Error in generating recommendations: {e}")
-        return None
+    all_coins = ["BTC", "ETH", "SOL", "ADA", "XRP", "DOT", "DOGE", "LTC"]
+    recommendations = [coin for coin in all_coins if coin not in liked_coins][:3]
+    return recommendations
