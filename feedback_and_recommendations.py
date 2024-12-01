@@ -5,7 +5,6 @@ import requests
 from ml_model import MLModel
 
 
-
 def get_binance_symbols():
     """
     Fetches the list of supported symbols from Binance API.
@@ -19,9 +18,9 @@ def get_binance_symbols():
         st.error("Failed to fetch Binance symbols. Please try again later.")
         return []
 
+
 # Initialize and train the ML model
-ml_model = MLModel("path/to/your/dataset.csv")
-vectorizer = ml_model.train_model()  # Train the model
+ml_model = MLModel("data/processed_data.csv")  # Pointing to the processed dataset
 
 
 def show_feedback_page():
@@ -51,8 +50,8 @@ def show_feedback_page():
 
     # Separate liked and disliked coins
     feedback_data = st.session_state["feedback_data"]
-    liked_coins = feedback_data[feedback_data["liked"] == 1]["coin"].tolist()
-    disliked_coins = feedback_data[feedback_data["liked"] == 0]["coin"].tolist()
+    liked_coins = feedback_data[feedback_data["liked"] > 0]["coin"].tolist()
+    disliked_coins = feedback_data[feedback_data["liked"] < 0]["coin"].tolist()
 
     # Display liked coins
     st.subheader("Liked Coins")
@@ -109,9 +108,13 @@ def show_feedback_page():
         elif new_coin not in st.session_state["binance_symbols"]:
             st.session_state["feedback_message"] = ("error", f"{new_coin} is not supported by Binance. Please enter a valid coin!")
         else:
-            # Add to the appropriate list
-            new_row = pd.DataFrame({"coin": [new_coin], "liked": [1 if liked else 0]})
-            st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
+            # Update the feedback data
+            if new_coin in feedback_data["coin"].values:
+                feedback_data.loc[feedback_data["coin"] == new_coin, "liked"] += (1 if liked else -1)
+            else:
+                new_row = pd.DataFrame({"coin": [new_coin], "liked": [1 if liked else -1]})
+                st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
+
             save_feedback_data()
             st.session_state["feedback_message"] = ("success", f"{new_coin} added to {'Liked' if liked else 'Disliked'} Coins!")
             st.rerun()  # Refresh the page
@@ -122,7 +125,6 @@ def show_feedback_page():
 
     if col2.button("👎 Add to Disliked Coins"):
         add_coin_to_feedback(new_coin, liked=False)
-
 
     # Display feedback message below the buttons with appropriate styling
     if "feedback_message" in st.session_state and st.session_state["feedback_message"]:
@@ -138,11 +140,8 @@ def show_feedback_page():
     st.subheader("Recommendations")
     if liked_coins:
         st.write("Based on your liked coins, you might like these:")
-        recommendations = ml_model.recommend_coins(user_feedback=liked_coins)
+        recommendations = ml_model.recommend_coins(pd.read_csv("D:/01_HSG/ComputerScience/Group_Project/Trading_Bot_03/Cloned Repository/group-project-final/data/processed_data.csv"))
         for rec in recommendations:
             st.write(f"- {rec}")
     else:
         st.info("Like some coins to get recommendations!")
-
-
-
