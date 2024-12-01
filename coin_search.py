@@ -1,15 +1,16 @@
 import streamlit as st
 import pandas as pd
+import os
 from utils import fetch_historical_data, calculate_percentage_change, plot_candlestick
 
 # Function to handle coin search and analysis
 def show_coin_search():
     """
     This function displays the coin search page.
-    It allows users to select a cryptocurrency, 
+    It allows users to select a cryptocurrency,
     set analysis parameters, and view the results.
     """
-    
+
     # Title for the search page
     st.title("Coin Search and Analysis")
 
@@ -54,9 +55,40 @@ def show_coin_search():
     st.markdown("---")
     st.subheader("What do you think about this coin?")
     col1, col2 = st.columns(2)
+
+    # Initialize feedback CSV and session state
+    feedback_file = "feedback.csv"
+    if "feedback_data" not in st.session_state:
+        if os.path.exists(feedback_file):
+            feedback_data = pd.read_csv(feedback_file).dropna()
+        else:
+            feedback_data = pd.DataFrame(columns=["coin", "liked"])
+        st.session_state["feedback_data"] = feedback_data
+
+    # Function to save feedback data to the CSV file
+    def save_feedback_data():
+        st.session_state["feedback_data"].to_csv(feedback_file, index=False)
+
+    # Handle the Like button
     if col1.button("👍 Like"):
-        st.session_state["feedback"] = {"coin": coin, "liked": 1}
-        st.success("Thank you for your feedback!")
+        feedback_data = st.session_state["feedback_data"]
+        if coin in feedback_data["coin"].values:
+            st.warning(f"{coin} is already in your feedback list!")
+        else:
+            # Add the coin to the liked list
+            new_row = pd.DataFrame({"coin": [coin], "liked": [1]})
+            st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
+            save_feedback_data()
+            st.success(f"{coin} added to Liked Coins!")
+
+    # Handle the Dislike button
     if col2.button("👎 Dislike"):
-        st.session_state["feedback"] = {"coin": coin, "liked": 0}
-        st.success("Thank you for your feedback!")
+        feedback_data = st.session_state["feedback_data"]
+        if coin in feedback_data["coin"].values:
+            st.warning(f"{coin} is already in your feedback list!")
+        else:
+            # Add the coin to the disliked list
+            new_row = pd.DataFrame({"coin": [coin], "liked": [0]})
+            st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
+            save_feedback_data()
+            st.success(f"{coin} added to Disliked Coins!")
