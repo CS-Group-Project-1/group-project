@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import os
 import requests
+from ml_model import MLModel
+
 
 
 def get_binance_symbols():
@@ -16,6 +18,10 @@ def get_binance_symbols():
     except Exception as e:
         st.error("Failed to fetch Binance symbols. Please try again later.")
         return []
+
+# Initialize and train the ML model
+ml_model = MLModel("path/to/your/dataset.csv")
+vectorizer = ml_model.train_model()  # Train the model
 
 
 def show_feedback_page():
@@ -132,18 +138,11 @@ def show_feedback_page():
     st.subheader("Recommendations")
     if liked_coins:
         st.write("Based on your liked coins, you might like these:")
-        recommendations = generate_recommendations(liked_coins)
+        recommendations = ml_model.recommend_coins(user_feedback=liked_coins)
         for rec in recommendations:
             st.write(f"- {rec}")
     else:
         st.info("Like some coins to get recommendations!")
 
 
-def generate_recommendations(liked_coins):
-    """
-    Generates recommendations based on the liked coins.
-    This is a placeholder function that suggests other coins.
-    """
-    all_coins = ["BTC", "ETH", "SOL", "ADA", "XRP", "DOT", "DOGE", "LTC"]
-    recommendations = [coin for coin in all_coins if coin not in liked_coins][:3]
-    return recommendations
+
