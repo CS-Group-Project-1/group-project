@@ -58,7 +58,7 @@ def show_feedback_page():
                 # Remove the coin from the feedback data
                 st.session_state["feedback_data"] = feedback_data[feedback_data["coin"] != coin]
                 save_feedback_data()
-                st.session_state["feedback_message"] = ""  # Clear messages
+                st.session_state["feedback_message"] = ""
                 st.rerun()  # Refresh the page
     else:
         st.info("No liked coins yet. Add one below!")
@@ -73,7 +73,7 @@ def show_feedback_page():
                 # Remove the coin from the feedback data
                 st.session_state["feedback_data"] = feedback_data[feedback_data["coin"] != coin]
                 save_feedback_data()
-                st.session_state["feedback_message"] = ""  # Clear messages
+                st.session_state["feedback_message"] = ""
                 st.rerun()  # Refresh the page
     else:
         st.info("No disliked coins yet. Add one below!")
@@ -82,54 +82,45 @@ def show_feedback_page():
     st.subheader("Add Coins to Liked or Disliked List")
     new_coin = st.text_input("Enter the coin symbol (e.g., BTC, ETH):").strip().upper()
 
-    # Initialize session state for feedback messages
-    if "feedback_message" not in st.session_state:
-        st.session_state["feedback_message"] = ""
-
-    # Display feedback message below the buttons
-    if st.session_state["feedback_message"]:
-        st.write("---")  # Optional divider for visual separation
-        if "added" in st.session_state["feedback_message"]:  # Success messages
-            st.success(st.session_state["feedback_message"])
-        else:  # Warning or error messages
-            st.warning(st.session_state["feedback_message"])
-
     # Buttons for liking or disliking coins
     col1, col2 = st.columns(2)
 
-    if col1.button("👍 Add to Liked Coins"):
-        if new_coin in liked_coins:
-            st.session_state["feedback_message"] = f"{new_coin} is already in the Liked Coins list!"
-        elif new_coin in disliked_coins:
-            st.session_state["feedback_message"] = f"{new_coin} is already in the Disliked Coins list!"
+    def add_coin_to_feedback(new_coin, liked):
+        if liked and new_coin in liked_coins:
+            st.session_state["feedback_message"] = ("warning", f"{new_coin} is already in the Liked Coins list!")
+        elif not liked and new_coin in disliked_coins:
+            st.session_state["feedback_message"] = ("warning", f"{new_coin} is already in the Disliked Coins list!")
+        elif liked and new_coin in disliked_coins:
+            st.session_state["feedback_message"] = ("error", f"{new_coin} is already in the Disliked Coins list! Remove it before adding to Liked Coins.")
+        elif not liked and new_coin in liked_coins:
+            st.session_state["feedback_message"] = ("error", f"{new_coin} is already in the Liked Coins list! Remove it before adding to Disliked Coins.")
         elif new_coin not in st.session_state["binance_symbols"]:
-            st.session_state["feedback_message"] = f"{new_coin} is not supported by Binance. Please enter a valid coin!"
+            st.session_state["feedback_message"] = ("error", f"{new_coin} is not supported by Binance. Please enter a valid coin!")
         elif new_coin:
-            # Add to liked coins
-            new_row = pd.DataFrame({"coin": [new_coin], "liked": [1]})
+            # Add to the appropriate list
+            new_row = pd.DataFrame({"coin": [new_coin], "liked": [1 if liked else 0]})
             st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
             save_feedback_data()
-            st.session_state["feedback_message"] = f"{new_coin} added to Liked Coins!"
+            st.session_state["feedback_message"] = ("success", f"{new_coin} added to {'Liked' if liked else 'Disliked'} Coins!")
             st.rerun()  # Refresh the page
         else:
-            st.session_state["feedback_message"] = "Please enter a valid coin symbol!"
+            st.session_state["feedback_message"] = ("error", "Please enter a valid coin symbol!")
+
+    if col1.button("👍 Add to Liked Coins"):
+        add_coin_to_feedback(new_coin, liked=True)
 
     if col2.button("👎 Add to Disliked Coins"):
-        if new_coin in disliked_coins:
-            st.session_state["feedback_message"] = f"{new_coin} is already in the Disliked Coins list!"
-        elif new_coin in liked_coins:
-            st.session_state["feedback_message"] = f"{new_coin} is already in the Liked Coins list!"
-        elif new_coin not in st.session_state["binance_symbols"]:
-            st.session_state["feedback_message"] = f"{new_coin} is not supported by Binance. Please enter a valid coin!"
-        elif new_coin:
-            # Add to disliked coins
-            new_row = pd.DataFrame({"coin": [new_coin], "liked": [0]})
-            st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
-            save_feedback_data()
-            st.session_state["feedback_message"] = f"{new_coin} added to Disliked Coins!"
-            st.rerun()  # Refresh the page
-        else:
-            st.session_state["feedback_message"] = "Please enter a valid coin symbol!"
+        add_coin_to_feedback(new_coin, liked=False)
+
+    # Display feedback message below the buttons with appropriate styling
+    if "feedback_message" in st.session_state and st.session_state["feedback_message"]:
+        message_type, message_text = st.session_state["feedback_message"]
+        if message_type == "success":
+            st.success(message_text)
+        elif message_type == "warning":
+            st.warning(message_text)
+        elif message_type == "error":
+            st.error(message_text)
 
     # Recommendations based on liked coins
     st.subheader("Recommendations")
