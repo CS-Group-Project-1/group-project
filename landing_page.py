@@ -18,10 +18,6 @@ def show_landing_page():
     - **Track Coins**: Add coins to your tracked list and get notifications when your criteria are met.
     """)
 
-    # Button to navigate to the coin search page
-    if st.button("Get Started"):
-        st.session_state["page"] = "coin_search"
-
     # Footer
     st.markdown("---")
     st.caption("Developed as part of a group project. Enjoy exploring the crypto world with Easy2Trade!")
