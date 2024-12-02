@@ -50,7 +50,7 @@ def show_coin_search():
             new_row = pd.DataFrame({"coin": [new_coin], "liked": [0]})
             st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
             st.session_state["feedback_data"].to_csv(feedback_file, index=False)
-            st.success(f"{new_coin} added to your list!")
+            st.success(f"{new_coin} added to your list!")  # Green success message
             st.rerun()
         else:
             st.warning(f"{new_coin} is already in your list!")
@@ -106,14 +106,14 @@ def show_coin_search():
             if st.session_state["last_action"] == "like":
                 st.warning(f"You have already liked {coin} in this search session!")
             else:
-                if st.session_state["last_action"] == "dislike":
-                    feedback_data.loc[feedback_data["coin"] == coin, "liked"] += 2  # Remove -1 and add +1
+                if coin in feedback_data["coin"].values:
+                    current_value = feedback_data.loc[feedback_data["coin"] == coin, "liked"].iloc[0]
+                    feedback_data.loc[feedback_data["coin"] == coin, "liked"] = (
+                        1 if current_value < 0 else current_value + 1
+                    )  # Ensure it toggles correctly
                 else:
-                    if coin in feedback_data["coin"].values:
-                        feedback_data.loc[feedback_data["coin"] == coin, "liked"] += 1
-                    else:
-                        new_row = pd.DataFrame({"coin": [coin], "liked": [1]})
-                        st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
+                    new_row = pd.DataFrame({"coin": [coin], "liked": [1]})
+                    st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
                 save_feedback_data()
                 st.success(f"{coin} liked!")
                 st.session_state["last_action"] = "like"
@@ -123,14 +123,14 @@ def show_coin_search():
             if st.session_state["last_action"] == "dislike":
                 st.warning(f"You have already disliked {coin} in this search session!")
             else:
-                if st.session_state["last_action"] == "like":
-                    feedback_data.loc[feedback_data["coin"] == coin, "liked"] -= 2  # Remove +1 and add -1
+                if coin in feedback_data["coin"].values:
+                    current_value = feedback_data.loc[feedback_data["coin"] == coin, "liked"].iloc[0]
+                    feedback_data.loc[feedback_data["coin"] == coin, "liked"] = (
+                        -1 if current_value > 0 else current_value - 1
+                    )  # Ensure it toggles correctly
                 else:
-                    if coin in feedback_data["coin"].values:
-                        feedback_data.loc[feedback_data["coin"] == coin, "liked"] -= 1
-                    else:
-                        new_row = pd.DataFrame({"coin": [coin], "liked": [-1]})
-                        st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
+                    new_row = pd.DataFrame({"coin": [coin], "liked": [-1]})
+                    st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
                 save_feedback_data()
                 st.error(f"{coin} disliked!")
                 st.session_state["last_action"] = "dislike"
