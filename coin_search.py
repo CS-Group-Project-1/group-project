@@ -50,10 +50,21 @@ def show_coin_search():
             new_row = pd.DataFrame({"coin": [new_coin], "liked": [0]})
             st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
             st.session_state["feedback_data"].to_csv(feedback_file, index=False)
-            st.success(f"{new_coin} added to your list!")  # Green success message
-            st.rerun()
+            st.session_state["feedback_message"] = ("success", f"{new_coin} has been added successfully!")  # Set success message
+            st.rerun()  # Refresh to display updated list
         else:
             st.warning(f"{new_coin} is already in your list!")
+
+    # Display feedback messages dynamically
+    if "feedback_message" in st.session_state and st.session_state["feedback_message"]:
+        message_type, message_text = st.session_state["feedback_message"]
+        if message_type == "success":
+            st.success(message_text)
+        elif message_type == "warning":
+            st.warning(message_text)
+        elif message_type == "error":
+            st.error(message_text)
+
 
     # Dropdown to select the time interval for analysis
     st.subheader("Step 2: Select Time Interval")
