@@ -24,8 +24,9 @@ def combine_csv_files_with_liked_column(input_folder, output_file):
         print(f"Reading file: {file_path}")
         df = pd.read_csv(file_path)
 
-        # Add a column to identify the coin from the file name
-        df['coin'] = file.split('.')[0]  # Use the filename (without extension) as the coin name
+        # Extract the coin name from the file name (remove "USDT" or other suffixes)
+        coin_name = file.split('.')[0].replace("USDT", "").strip().upper()
+        df['coin'] = coin_name  # Use the cleaned coin name
 
         # Add the 'liked' column with a default value of 0
         df['liked'] = 0
