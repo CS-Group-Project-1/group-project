@@ -33,6 +33,10 @@ def show_coin_search():
         st.session_state["start_value"] = None
     if "feedback_message" not in st.session_state:
         st.session_state["feedback_message"] = None
+    if "selected_interval" not in st.session_state:
+        st.session_state["selected_interval"] = "1d"
+    if "selected_threshold" not in st.session_state:
+        st.session_state["selected_threshold"] = 1.0
 
     feedback_data = st.session_state["feedback_data"]
 
@@ -56,7 +60,7 @@ def show_coin_search():
 
     # Add button logic
     if col1.button("Add Coin"):
-        clear_feedback_message()  # Clear old messages
+        clear_feedback_message()
         if not coin_action:
             st.error("Please enter a valid coin symbol!")
         elif coin_action not in st.session_state["binance_symbols"]:
@@ -73,7 +77,7 @@ def show_coin_search():
 
     # Remove button logic
     if col2.button("Remove Coin"):
-        clear_feedback_message()  # Clear old messages
+        clear_feedback_message()
         if not coin_action:
             st.warning("Please enter a coin symbol to remove!")
         elif coin_action in existing_coins:
@@ -81,7 +85,7 @@ def show_coin_search():
             st.session_state["feedback_data"].to_csv("feedback.csv", index=False)
             st.session_state["feedback_message"] = ("success", f"{coin_action} has been removed successfully!")
             if st.session_state["current_search_coin"] == coin_action:
-                st.session_state["current_search_coin"] = None  # Reset current search coin if it matches
+                st.session_state["current_search_coin"] = None
             st.rerun()
         else:
             st.error(f"{coin_action} is not in your list and cannot be removed!")
@@ -98,30 +102,51 @@ def show_coin_search():
 
     # Dropdown to select the time interval for analysis
     st.subheader("Step 2: Select Time Interval")
-    interval = st.selectbox("Choose an interval", ["1m", "5m", "1h", "1d", "1w", "1M"], index=3)
+    interval = st.selectbox(
+        "Choose an interval",
+        ["1m", "5m", "1h", "1d", "1w", "1M"],
+        index=["1m", "5m", "1h", "1d", "1w", "1M"].index(st.session_state["selected_interval"]),
+        key="interval_dropdown",
+    )
 
     # Input box to set the threshold for percentage change
     st.subheader("Step 3: Set Percentage Threshold")
-    threshold = st.number_input("Enter a percentage threshold (%)", min_value=0.0, step=0.1, value=1.0)
+    threshold = st.number_input(
+        "Enter a percentage threshold (%)",
+        min_value=0.0,
+        step=0.1,
+        value=st.session_state["selected_threshold"],
+    )
 
     # Analyze button logic
     if st.button("Analyze"):
         if selected_coin == "Search for a new coin...":
             st.error("Please select or input a valid coin!")
-            return  # Prevent analysis for invalid selection
+            return
 
         st.session_state["analysis_done"] = True
         st.session_state["current_search_coin"] = selected_coin
-        st.session_state["last_analyzed_coin"] = selected_coin  # Update the last analyzed coin
-        st.session_state["feedback_message"] = None  # Reset feedback messages
-        st.session_state["last_action"] = None  # Reset feedback actions for the new session
-        st.session_state["start_value"] = feedback_data.loc[feedback_data["coin"] == selected_coin, "liked"].iloc[0] if selected_coin in feedback_data["coin"].values else 0  # Initialize start value
+        st.session_state["last_analyzed_coin"] = selected_coin
+        st.session_state["feedback_message"] = None
+        st.session_state["last_action"] = None
+        st.session_state["start_value"] = (
+            feedback_data.loc[feedback_data["coin"] == selected_coin, "liked"].iloc[0]
+            if selected_coin in feedback_data["coin"].values
+            else 0
+        )
+        st.session_state["selected_interval"] = interval
+        st.session_state["selected_threshold"] = threshold
+
         st.write(f"Analyzing {selected_coin} over a {interval} interval with a {threshold}% threshold...")
         historical_data = fetch_historical_data(selected_coin, interval)
         if historical_data is not None:
             st.session_state["historical_data"] = historical_data
             percentage_change = calculate_percentage_change(historical_data)
             st.session_state["percentage_change"] = percentage_change
+            if abs(percentage_change) >= threshold:
+                st.success(f"Threshold met! Percentage change: {percentage_change:.2f}%")
+            else:
+                st.info(f"Threshold not met. Percentage change: {percentage_change:.2f}%")
         else:
             st.error(f"Failed to fetch data for {selected_coin}. Please try again later.")
             st.session_state["historical_data"] = None
@@ -136,7 +161,8 @@ def show_coin_search():
         )
         st.subheader(f"{st.session_state['last_analyzed_coin']} Historical Performance")
         st.caption(percentage_change_display)
-        plot_candlestick(st.session_state["historical_data"], st.session_state["last_analyzed_coin"], interval)
+        plot_candlestick(st.session_state["historical_data"], st.session_state["last_analyzed_coin"], st.session_state["selected_interval"])
+
 
         # Feedback Section
         st.markdown("---")
