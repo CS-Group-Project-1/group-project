@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from utils import fetch_historical_data, calculate_percentage_change, plot_candlestick
 
+
 def show_coin_search():
     """
     Displays the Coin Search page for cryptocurrency analysis and feedback.
@@ -28,35 +29,62 @@ def show_coin_search():
         st.session_state["percentage_change"] = None
     if "last_action" not in st.session_state:
         st.session_state["last_action"] = None
+    if "start_value" not in st.session_state:
+        st.session_state["start_value"] = None
     if "feedback_message" not in st.session_state:
         st.session_state["feedback_message"] = None
 
     feedback_data = st.session_state["feedback_data"]
 
-    # Dropdown to select an existing coin or input a new one
-    st.subheader("Step 1: Select or Add a Cryptocurrency")
+    # Dropdown to display the existing list of coins
+    st.subheader("Step 1: Manage Your Cryptocurrency List")
     existing_coins = feedback_data["coin"].tolist()
-    coin = st.selectbox(
-        "Previously Liked Cryptocurrency",
+    selected_coin = st.selectbox(
+        "Previously Added Coins",
         ["Search for a new coin..."] + existing_coins,
         index=0 if st.session_state["current_search_coin"] is None else existing_coins.index(st.session_state["current_search_coin"]) + 1,
     )
 
-    new_coin = st.text_input("Enter Disliked or New Coin Symbol (e.g., BTC, ETH):").strip().upper()
+    # Logic for adding or removing a coin
+    coin_action = st.text_input("Enter Coin Symbol to Add or Remove (e.g., BTC, ETH):").strip().upper()
 
-    # Add new coin logic
-    if new_coin and new_coin not in st.session_state["binance_symbols"]:
-        st.error(f"{new_coin} is not supported by Binance. Please enter a valid coin!")
-    elif new_coin and st.button("Add Coin"):
-        if new_coin not in existing_coins:
-            new_row = pd.DataFrame({"coin": [new_coin], "liked": [0]})
+    col1, col2 = st.columns([1, 1])
+
+    # Clear old feedback messages before showing a new one
+    def clear_feedback_message():
+        st.session_state["feedback_message"] = None
+
+    # Add button logic
+    if col1.button("Add Coin"):
+        clear_feedback_message()  # Clear old messages
+        if not coin_action:
+            st.error("Please enter a valid coin symbol!")
+        elif coin_action not in st.session_state["binance_symbols"]:
+            st.error(f"{coin_action} is not supported by Binance. Please enter a valid coin!")
+        elif coin_action in existing_coins:
+            st.warning(f"{coin_action} is already in your list!")
+        else:
+            new_row = pd.DataFrame({"coin": [coin_action], "liked": [0]})
             st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
             st.session_state["feedback_data"].to_csv("feedback.csv", index=False)
-            st.session_state["feedback_message"] = ("success", f"{new_coin} has been added successfully!")
-            st.session_state["current_search_coin"] = new_coin
+            st.session_state["feedback_message"] = ("success", f"{coin_action} has been added successfully!")
+            st.session_state["current_search_coin"] = coin_action
+            st.rerun()
+
+    # Remove button logic
+    if col2.button("Remove Coin"):
+        clear_feedback_message()  # Clear old messages
+        if not coin_action:
+            st.warning("Please enter a coin symbol to remove!")
+        elif coin_action in existing_coins:
+            st.session_state["feedback_data"] = feedback_data[feedback_data["coin"] != coin_action]
+            st.session_state["feedback_data"].to_csv("feedback.csv", index=False)
+            st.session_state["feedback_message"] = ("success", f"{coin_action} has been removed successfully!")
+            if st.session_state["current_search_coin"] == coin_action:
+                st.session_state["current_search_coin"] = None  # Reset current search coin if it matches
             st.rerun()
         else:
-            st.warning(f"{new_coin} is already in your list!")
+            st.error(f"{coin_action} is not in your list and cannot be removed!")
 
     # Display feedback messages dynamically
     if st.session_state["feedback_message"]:
@@ -78,32 +106,26 @@ def show_coin_search():
 
     # Analyze button logic
     if st.button("Analyze"):
-        if coin == "Search for a new coin...":
+        if selected_coin == "Search for a new coin...":
             st.error("Please select or input a valid coin!")
             return  # Prevent analysis for invalid selection
 
-        # Initialize start_value with the current liked value of the coin
-        if coin in feedback_data["coin"].values:
-            st.session_state["start_value"] = feedback_data.loc[feedback_data["coin"] == coin, "liked"].iloc[0]
-        else:
-            st.session_state["start_value"] = 0  # Default to 0 if the coin is not in the feedback list
-
         st.session_state["analysis_done"] = True
-        st.session_state["current_search_coin"] = coin
-        st.session_state["last_analyzed_coin"] = coin  # Update the last analyzed coin
+        st.session_state["current_search_coin"] = selected_coin
+        st.session_state["last_analyzed_coin"] = selected_coin  # Update the last analyzed coin
         st.session_state["feedback_message"] = None  # Reset feedback messages
         st.session_state["last_action"] = None  # Reset feedback actions for the new session
-        st.write(f"Analyzing {coin} over a {interval} interval with a {threshold}% threshold...")
-        historical_data = fetch_historical_data(coin, interval)
+        st.session_state["start_value"] = feedback_data.loc[feedback_data["coin"] == selected_coin, "liked"].iloc[0] if selected_coin in feedback_data["coin"].values else 0  # Initialize start value
+        st.write(f"Analyzing {selected_coin} over a {interval} interval with a {threshold}% threshold...")
+        historical_data = fetch_historical_data(selected_coin, interval)
         if historical_data is not None:
             st.session_state["historical_data"] = historical_data
             percentage_change = calculate_percentage_change(historical_data)
             st.session_state["percentage_change"] = percentage_change
         else:
-            st.error(f"Failed to fetch data for {coin}. Please try again later.")
+            st.error(f"Failed to fetch data for {selected_coin}. Please try again later.")
             st.session_state["historical_data"] = None
             st.session_state["percentage_change"] = None
-
 
     # Display chart and feedback options if analysis is done
     if st.session_state.get("analysis_done") and st.session_state.get("historical_data") is not None:
@@ -123,20 +145,17 @@ def show_coin_search():
 
         def save_feedback_data():
             st.session_state["feedback_data"].to_csv("feedback.csv", index=False)
-
-                # Ensure start_value is initialized only when the Analyze button is clicked
-        if "start_value" not in st.session_state:
-            st.session_state["start_value"] = None
-
+                    
         # Like button logic
         if col1.button("👍 Like"):
             if st.session_state["last_action"] == "like":
-                st.warning(f"You have already liked {coin} in this search session!")
+                st.warning(f"You have already liked {selected_coin} in this search session!")
             else:
+                # Ensure start_value is preserved and valid
                 if st.session_state["start_value"] is None:
                     st.error("Analyze the coin first before providing feedback!")
                 else:
-                    start_value = st.session_state["start_value"]
+                    start_value = st.session_state["start_value"]  # Fixed starting value
 
                     # Compute current_value based on start_value
                     if st.session_state["last_action"] == "dislike":  # Switch from dislike to like
@@ -146,21 +165,26 @@ def show_coin_search():
                     else:  # Normal like
                         current_value = start_value + 1
 
+                    # Safeguard: prevent zero recalculation errors
+                    if current_value == 0:
+                        current_value = start_value + 2
+
                     # Update the feedback data
-                    feedback_data.loc[feedback_data["coin"] == coin, "liked"] = current_value
+                    feedback_data.loc[feedback_data["coin"] == selected_coin, "liked"] = current_value
                     save_feedback_data()
-                    st.success(f"{coin} liked!")
+                    st.success(f"{selected_coin} liked!")
                     st.session_state["last_action"] = "like"  # Record the action
 
         # Dislike button logic
         if col2.button("👎 Dislike"):
             if st.session_state["last_action"] == "dislike":
-                st.warning(f"You have already disliked {coin} in this search session!")
+                st.warning(f"You have already disliked {selected_coin} in this search session!")
             else:
+                # Ensure start_value is preserved and valid
                 if st.session_state["start_value"] is None:
                     st.error("Analyze the coin first before providing feedback!")
                 else:
-                    start_value = st.session_state["start_value"]
+                    start_value = st.session_state["start_value"]  # Fixed starting value
 
                     # Compute current_value based on start_value
                     if st.session_state["last_action"] == "like":  # Switch from like to dislike
@@ -170,8 +194,12 @@ def show_coin_search():
                     else:  # Normal dislike
                         current_value = start_value - 1
 
+                    # Safeguard: prevent zero recalculation errors
+                    if current_value == 0:
+                        current_value = start_value - 2
+
                     # Update the feedback data
-                    feedback_data.loc[feedback_data["coin"] == coin, "liked"] = current_value
+                    feedback_data.loc[feedback_data["coin"] == selected_coin, "liked"] = current_value
                     save_feedback_data()
-                    st.error(f"{coin} disliked!")
+                    st.error(f"{selected_coin} disliked!")
                     st.session_state["last_action"] = "dislike"  # Record the action
