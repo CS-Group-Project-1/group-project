@@ -41,6 +41,7 @@ def show_feedback_page():
             if col2.button("❌ Remove", key=f"remove_liked_{row['coin']}"):
                 st.session_state["feedback_data"] = feedback_data[feedback_data["coin"] != row['coin']]
                 save_feedback_data()
+                st.success(f"Removed {row['coin']} from liked coins.")
                 st.rerun()
     else:
         st.info("No liked coins yet. Add one below!")
@@ -54,6 +55,7 @@ def show_feedback_page():
             if col2.button("❌ Remove", key=f"remove_disliked_{row['coin']}"):
                 st.session_state["feedback_data"] = feedback_data[feedback_data["coin"] != row['coin']]
                 save_feedback_data()
+                st.success(f"Removed {row['coin']} from disliked coins.")
                 st.rerun()
     else:
         st.info("No disliked coins yet. Add one below!")
@@ -61,7 +63,17 @@ def show_feedback_page():
     # Synchronize with processed_data.csv
     st.subheader("Synchronize Data")
     if st.button("Synchronize with Processed Data"):
-        synchronize_with_processed_data(st.session_state["feedback_data"], processed_file)
+        try:
+            synchronize_with_processed_data(st.session_state["feedback_data"], processed_file)
+            st.success("Data synchronized successfully!")
+        except Exception as e:
+            st.error(f"Synchronization failed: {str(e)}")
 
     # Show recommendations at the bottom
+    st.markdown("---")
     show_recommendations()
+
+
+# Main script functionality for standalone testing
+if __name__ == "__main__":
+    show_feedback_page()

@@ -24,9 +24,30 @@ def synchronize_with_processed_data(feedback_data, processed_file):
         # Drop the temporary 'coin_base' column and save the updated file
         processed_data = processed_data.drop(columns=["coin_base"])
         processed_data.to_csv(processed_file, index=False)
-        st.success("Data synchronized successfully!")
+        st.success("Processed data synchronized successfully!")
     else:
         st.error("Processed data file not found. Synchronization failed!")
+
+
+def add_to_search_list(coin):
+    """
+    Adds a coin to the Coin Search list dynamically.
+
+    Parameters:
+    - coin: The coin symbol to add to the search list.
+    """
+    if "feedback_data" in st.session_state:
+        feedback_data = st.session_state["feedback_data"]
+        if coin not in feedback_data["coin"].values:
+            new_row = pd.DataFrame({"coin": [coin], "liked": [0]})
+            feedback_data = pd.concat([feedback_data, new_row], ignore_index=True)
+            st.session_state["feedback_data"] = feedback_data
+            feedback_data.to_csv("feedback.csv", index=False)
+            st.success(f"{coin} added to the search list!")
+        else:
+            st.warning(f"{coin} is already in the search list.")
+    else:
+        st.error("Feedback data is not initialized. Please try again.")
 
 
 def show_recommendations():
@@ -42,19 +63,22 @@ def show_recommendations():
     # Initialize the ML model
     ml_model = MLModel(processed_file)
 
-    # Retrain the model after every update
-    if st.button("Retrain Model"):
-        ml_model.train_model()
-        st.success("Model retrained successfully!")
-
-    # Load feedback data
+    # Synchronize feedback with processed data
     if os.path.exists(feedback_file):
         feedback_data = pd.read_csv(feedback_file).dropna()
-        liked_coins = feedback_data[feedback_data["liked"] > 0]["coin"].tolist()
-        current_coins = feedback_data["coin"].tolist()  # List of all coins in feedback
+        synchronize_with_processed_data(feedback_data, processed_file)
     else:
-        liked_coins = []
-        current_coins = []
+        feedback_data = pd.DataFrame(columns=["coin", "liked"])
+        feedback_data.to_csv(feedback_file, index=False)
+
+    # Retrain the model after synchronization
+    st.info("Retraining the model with updated data...")
+    ml_model.train_model()
+    st.success("Model retrained successfully!")
+
+    # Load feedback data
+    liked_coins = feedback_data[feedback_data["liked"] > 0]["coin"].tolist()
+    current_coins = feedback_data["coin"].tolist()  # List of all coins in feedback
 
     # Generate recommendations
     if liked_coins:
@@ -65,7 +89,7 @@ def show_recommendations():
 
         # Filter recommendations to ensure each coin is unique and not in the feedback list
         filtered_recommendations = [
-            rec for rec in set(recommendations) if rec not in current_coins
+            rec for rec in recommendations if rec not in current_coins
         ]
 
         if not filtered_recommendations:
@@ -75,18 +99,8 @@ def show_recommendations():
                 col1, col2 = st.columns([8, 2])
                 col1.write(f"- {rec}")
                 if col2.button(f"➕ Add {rec} to Feedback and Search", key=f"add_{rec}"):
-                    # Add the recommended coin to feedback
-                    new_row = pd.DataFrame({"coin": [rec], "liked": [0]})
-                    feedback_data = pd.concat([feedback_data, new_row], ignore_index=True)
-                    feedback_data.to_csv(feedback_file, index=False)
-
-                    # Update coin search state
-                    if "feedback_data" in st.session_state:
-                        st.session_state["feedback_data"] = feedback_data
-                        st.session_state["current_search_coin"] = rec
-                        st.success(f"{rec} added to feedback and search!")
-                    else:
-                        st.error("Failed to add the coin to the search list. Please try again.")
+                    # Add the recommended coin to feedback and search
+                    add_to_search_list(rec)
     else:
         st.info("Like some coins to get personalized recommendations!")
 

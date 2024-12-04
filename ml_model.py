@@ -99,20 +99,22 @@ class MLModel:
             return []
 
         # Preprocess features for prediction
-        liked_features = liked_coins.drop(columns=["liked", "coin", "timestamp", "close", "volume"])
         unrated_features = unrated_coins.drop(columns=["liked", "coin", "timestamp", "close", "volume"])
-
-        liked_features = pd.get_dummies(liked_features, columns=["volatility_category", "avg_volume_category", "trend"], drop_first=True)
         unrated_features = pd.get_dummies(unrated_features, columns=["volatility_category", "avg_volume_category", "trend"], drop_first=True)
 
-        # Align columns in case features mismatch
-        liked_features, unrated_features = liked_features.align(unrated_features, fill_value=0, axis=1)
+        # Align columns with the training data
+        trained_features = self.model.feature_names_in_
+        unrated_features = unrated_features.reindex(columns=trained_features, fill_value=0)
 
         # Predict probabilities for unrated coins
         unrated_coins["recommendation_score"] = self.model.predict_proba(unrated_features)[:, 1]
 
-        # Sort by recommendation score and filter out already-liked/disliked coins
-        recommended_coins = unrated_coins.sort_values(by="recommendation_score", ascending=False)["coin"].tolist()
+        # Sort by recommendation score and filter out already-liked coins
+        recommended_coins = (
+            unrated_coins.sort_values(by="recommendation_score", ascending=False)["coin"]
+            .drop_duplicates()
+            .tolist()
+        )
         print(f"Recommended coins: {recommended_coins[:5]}")
 
         return recommended_coins[:5]
