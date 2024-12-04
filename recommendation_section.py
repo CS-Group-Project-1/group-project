@@ -15,11 +15,10 @@ def synchronize_with_processed_data(feedback_data, processed_file):
     if os.path.exists(processed_file):
         processed_data = pd.read_csv(processed_file)
         # Update the "liked" column in processed_data based on feedback
+        processed_data["coin_base"] = processed_data["coin"].str.replace("USDT", "", regex=False).str.strip()
         for _, row in feedback_data.iterrows():
             coin = row["coin"]
             liked = row["liked"]
-            # Match the coin name in processed_data (remove "USDT" or other suffixes)
-            processed_data["coin_base"] = processed_data["coin"].str.replace("USDT", "", regex=False).str.strip()
             if coin in processed_data["coin_base"].values:
                 processed_data.loc[processed_data["coin_base"] == coin, "liked"] = liked
         # Drop the temporary 'coin_base' column and save the updated file
@@ -46,7 +45,7 @@ def show_recommendations():
     # Retrain the model after every update
     if st.button("Retrain Model"):
         ml_model.train_model()
-        st.success("Model retrained successfully!") 
+        st.success("Model retrained successfully!")
 
     # Load feedback data
     if os.path.exists(feedback_file):
@@ -75,11 +74,24 @@ def show_recommendations():
             for rec in filtered_recommendations:
                 col1, col2 = st.columns([8, 2])
                 col1.write(f"- {rec}")
-                if col2.button(f"➕ Add {rec} to Feedback", key=f"add_{rec}"):
+                if col2.button(f"➕ Add {rec} to Feedback and Search", key=f"add_{rec}"):
                     # Add the recommended coin to feedback
                     new_row = pd.DataFrame({"coin": [rec], "liked": [0]})
                     feedback_data = pd.concat([feedback_data, new_row], ignore_index=True)
                     feedback_data.to_csv(feedback_file, index=False)
-                    st.success(f"{rec} added to feedback!")
+
+                    # Update coin search state
+                    if "feedback_data" in st.session_state:
+                        st.session_state["feedback_data"] = feedback_data
+                        st.session_state["current_search_coin"] = rec
+                        st.success(f"{rec} added to feedback and search!")
+                    else:
+                        st.error("Failed to add the coin to the search list. Please try again.")
     else:
         st.info("Like some coins to get personalized recommendations!")
+
+
+# Main script functionality (if needed for standalone testing)
+if __name__ == "__main__":
+    feedback_data_sample = pd.DataFrame({"coin": ["BTC", "ETH"], "liked": [1, 2]})
+    synchronize_with_processed_data(feedback_data_sample, "data/processed_data.csv")
