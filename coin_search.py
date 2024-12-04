@@ -1,7 +1,25 @@
 import streamlit as st
 import pandas as pd
 import os
+import requests
 from utils import fetch_historical_data, calculate_percentage_change, plot_candlestick
+
+
+def fetch_binance_symbols():
+    """
+    Fetches the list of supported symbols from Binance API.
+    Returns a list of coins (excluding pairs).
+    """
+    try:
+        response = requests.get("https://api.binance.com/api/v3/exchangeInfo")
+        response.raise_for_status()
+        data = response.json()
+        # Filter and keep only symbols ending with 'USDT' to fetch coins
+        symbols = [symbol["symbol"][:-4] for symbol in data["symbols"] if symbol["symbol"].endswith("USDT")]
+        return list(set(symbols))  # Remove duplicates
+    except Exception as e:
+        st.error("Failed to fetch Binance symbols. Please try again later.")
+        return ["BTC", "ETH", "SOL", "ADA", "XRP"]  # Default fallback coins
 
 
 def show_coin_search():
@@ -12,29 +30,39 @@ def show_coin_search():
 
     # Initialize session state variables
     if "binance_symbols" not in st.session_state:
-        st.session_state["binance_symbols"] = ["BTC", "ETH", "SOL", "ADA", "XRP"]  # Replace with dynamic fetching logic
+        st.session_state["binance_symbols"] = fetch_binance_symbols()
+
     if "feedback_data" not in st.session_state:
         feedback_file = "feedback.csv"
         if os.path.exists(feedback_file):
             st.session_state["feedback_data"] = pd.read_csv(feedback_file).dropna()
         else:
             st.session_state["feedback_data"] = pd.DataFrame(columns=["coin", "liked"])
+
     if "current_search_coin" not in st.session_state:
         st.session_state["current_search_coin"] = None
+
     if "last_analyzed_coin" not in st.session_state:
         st.session_state["last_analyzed_coin"] = None
+
     if "analysis_done" not in st.session_state:
         st.session_state["analysis_done"] = False
+
     if "percentage_change" not in st.session_state:
         st.session_state["percentage_change"] = None
+
     if "last_action" not in st.session_state:
         st.session_state["last_action"] = None
+
     if "start_value" not in st.session_state:
         st.session_state["start_value"] = None
+
     if "feedback_message" not in st.session_state:
         st.session_state["feedback_message"] = None
+
     if "selected_interval" not in st.session_state:
         st.session_state["selected_interval"] = "1d"
+
     if "selected_threshold" not in st.session_state:
         st.session_state["selected_threshold"] = 1.0
 
@@ -73,6 +101,7 @@ def show_coin_search():
             st.session_state["feedback_data"].to_csv("feedback.csv", index=False)
             st.session_state["feedback_message"] = ("success", f"{coin_action} has been added successfully!")
             st.session_state["current_search_coin"] = coin_action
+            st.success(f"Coin {coin_action} added to the list!")  # Success message
             st.rerun()
 
     # Remove button logic
@@ -86,6 +115,7 @@ def show_coin_search():
             st.session_state["feedback_message"] = ("success", f"{coin_action} has been removed successfully!")
             if st.session_state["current_search_coin"] == coin_action:
                 st.session_state["current_search_coin"] = None
+            st.success(f"Coin {coin_action} removed from the list!")  # Success message
             st.rerun()
         else:
             st.error(f"{coin_action} is not in your list and cannot be removed!")
@@ -151,6 +181,8 @@ def show_coin_search():
             st.error(f"Failed to fetch data for {selected_coin}. Please try again later.")
             st.session_state["historical_data"] = None
             st.session_state["percentage_change"] = None
+
+
 
     # Display chart and feedback options if analysis is done
     if st.session_state.get("analysis_done") and st.session_state.get("historical_data") is not None:
