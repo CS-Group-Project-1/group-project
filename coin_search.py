@@ -5,9 +5,6 @@ import requests
 from utils import fetch_historical_data, calculate_percentage_change, plot_candlestick
 
 
-TRACKED_COINS_FILE = "tracked_coins.csv"
-
-
 def fetch_binance_symbols():
     """
     Fetches the list of supported symbols from Binance API.
@@ -23,19 +20,6 @@ def fetch_binance_symbols():
     except Exception as e:
         st.error("Failed to fetch Binance symbols. Please try again later.")
         return ["BTC", "ETH", "SOL", "ADA", "XRP"]  # Default fallback coins
-
-
-def load_tracked_coins():
-    """Load tracked coins from the file."""
-    if os.path.exists(TRACKED_COINS_FILE):
-        return pd.read_csv(TRACKED_COINS_FILE)
-    else:
-        return pd.DataFrame(columns=["coin", "threshold"])
-
-
-def save_tracked_coins(data):
-    """Save tracked coins to the file."""
-    data.to_csv(TRACKED_COINS_FILE, index=False)
 
 
 def show_coin_search():
@@ -67,6 +51,15 @@ def show_coin_search():
     if "percentage_change" not in st.session_state:
         st.session_state["percentage_change"] = None
 
+    if "last_action" not in st.session_state:
+        st.session_state["last_action"] = None
+
+    if "start_value" not in st.session_state:
+        st.session_state["start_value"] = None
+
+    if "feedback_message" not in st.session_state:
+        st.session_state["feedback_message"] = None
+
     if "selected_interval" not in st.session_state:
         st.session_state["selected_interval"] = "1d"
 
@@ -83,6 +76,59 @@ def show_coin_search():
         ["Search for a new coin..."] + existing_coins,
         index=0 if st.session_state["current_search_coin"] is None else existing_coins.index(st.session_state["current_search_coin"]) + 1,
     )
+
+    # Logic for adding or removing a coin
+    coin_action = st.text_input("Enter Coin Symbol to Add or Remove (e.g., BTC, ETH):").strip().upper()
+
+    col1, col2 = st.columns([1, 1])
+
+    # Clear old feedback messages before showing a new one
+    def clear_feedback_message():
+        st.session_state["feedback_message"] = None
+
+    # Add button logic
+    if col1.button("Add Coin"):
+        clear_feedback_message()
+        if not coin_action:
+            st.error("Please enter a valid coin symbol!")
+        elif coin_action not in st.session_state["binance_symbols"]:
+            st.error(f"{coin_action} is not supported by Binance. Please enter a valid coin!")
+        elif coin_action in existing_coins:
+            st.warning(f"{coin_action} is already in your list!")
+        else:
+            new_row = pd.DataFrame({"coin": [coin_action], "liked": [0]})
+            st.session_state["feedback_data"] = pd.concat([feedback_data, new_row], ignore_index=True)
+            st.session_state["feedback_data"].to_csv("feedback.csv", index=False)
+            st.session_state["feedback_message"] = ("success", f"{coin_action} has been added successfully!")
+            st.session_state["current_search_coin"] = coin_action
+            st.success(f"Coin {coin_action} added to the list!")  # Success message
+            st.rerun()
+
+    # Remove button logic
+    if col2.button("Remove Coin"):
+        clear_feedback_message()
+        if not coin_action:
+            st.warning("Please enter a coin symbol to remove!")
+        elif coin_action in existing_coins:
+            st.session_state["feedback_data"] = feedback_data[feedback_data["coin"] != coin_action]
+            st.session_state["feedback_data"].to_csv("feedback.csv", index=False)
+            st.session_state["feedback_message"] = ("success", f"{coin_action} has been removed successfully!")
+            if st.session_state["current_search_coin"] == coin_action:
+                st.session_state["current_search_coin"] = None
+            st.success(f"Coin {coin_action} removed from the list!")  # Success message
+            st.rerun()
+        else:
+            st.error(f"{coin_action} is not in your list and cannot be removed!")
+
+    # Display feedback messages dynamically
+    if st.session_state["feedback_message"]:
+        message_type, message_text = st.session_state["feedback_message"]
+        if message_type == "success":
+            st.success(message_text)
+        elif message_type == "warning":
+            st.warning(message_text)
+        elif message_type == "error":
+            st.error(message_text)
 
     # Dropdown to select the time interval for analysis
     st.subheader("Step 2: Select Time Interval")
@@ -111,6 +157,13 @@ def show_coin_search():
         st.session_state["analysis_done"] = True
         st.session_state["current_search_coin"] = selected_coin
         st.session_state["last_analyzed_coin"] = selected_coin
+        st.session_state["feedback_message"] = None
+        st.session_state["last_action"] = None
+        st.session_state["start_value"] = (
+            feedback_data.loc[feedback_data["coin"] == selected_coin, "liked"].iloc[0]
+            if selected_coin in feedback_data["coin"].values
+            else 0
+        )
         st.session_state["selected_interval"] = interval
         st.session_state["selected_threshold"] = threshold
 
@@ -124,21 +177,10 @@ def show_coin_search():
                 st.success(f"Threshold met! Percentage change: {percentage_change:.2f}%")
             else:
                 st.info(f"Threshold not met. Percentage change: {percentage_change:.2f}%")
-                if st.button(f"Track {selected_coin}"):
-                    # Add coin to tracked list
-                    tracked_coins = load_tracked_coins()
-                    if selected_coin not in tracked_coins["coin"].values:
-                        new_row = pd.DataFrame({"coin": [selected_coin], "threshold": [threshold]})
-                        tracked_coins = pd.concat([tracked_coins, new_row], ignore_index=True)
-                        save_tracked_coins(tracked_coins)
-                        st.success(f"{selected_coin} added to your tracked coins list!")
-                    else:
-                        st.warning(f"{selected_coin} is already in your tracked coins list.")
         else:
             st.error(f"Failed to fetch data for {selected_coin}. Please try again later.")
             st.session_state["historical_data"] = None
             st.session_state["percentage_change"] = None
-
 
 
 
