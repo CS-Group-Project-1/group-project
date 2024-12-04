@@ -1,4 +1,6 @@
 __pycache__/
 feedback.csv
+email_credentials.py
+
 
 *.pyc

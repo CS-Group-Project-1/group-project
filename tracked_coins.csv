@@ -1,5 +1,3 @@
-coin,threshold
-BTC,500.0
-ETH,10.0
-ADA,70.0
-BNB,100.0
+coin,threshold,initial_price
+ADA,1.0,1.1564
+ETH,1.0,3782.81
