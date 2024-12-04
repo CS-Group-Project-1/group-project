@@ -59,7 +59,8 @@ def fetch_all_data():
     """
     Fetch historical data for a predefined list of symbols.
     """
-    symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT", "SOLUSDT", "XRPUSDT"]
+    symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT", "SOLUSDT", "XRPUSDT", "MATICUSDT", "DOGEUSDT", "SHIBUSDT", "ARBUSDT", "OPUSDT", "AVAXUSDT", "ATOMUSDT", "DOTUSDT", "LINKUSDT", "LTCUSDT", "BNBUSDT", "UNIUSDT", "AAVEUSDT", "SANDUSDT", "MANAUSDT", "AXSUSDT", "FTMUSDT", "NEARUSDT", "ALGOUSDT", "GRTUSDT", "EGLDUSDT", "XTZUSDT", "APEUSDT", "FILUSDT", "RUNEUSDT"]
+
     interval = Client.KLINE_INTERVAL_1DAY
 
     for symbol in symbols:

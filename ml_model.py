@@ -87,26 +87,34 @@ class MLModel:
             else:
                 raise FileNotFoundError("Trained model not found. Please train the model first.")
 
-        # Simulate user feedback as input features for prediction
-        feedback_data = self.load_data()
-        feedback_data = feedback_data[feedback_data["coin"].isin(user_feedback)]
+        # Load data
+        data = self.load_data()
 
-        if feedback_data.empty:
-            print("No user feedback found in the dataset.")
+        # Separate liked, disliked, and unrated coins
+        liked_coins = data[data["coin"].isin(user_feedback) & (data["liked"] > 0)]
+        unrated_coins = data[data["liked"] == 0]
+
+        if liked_coins.empty or unrated_coins.empty:
+            print("No recommendations possible due to insufficient data.")
             return []
 
-        feedback_features = feedback_data.drop(columns=["liked", "coin", "timestamp", "close", "volume"])
-        feedback_features = pd.get_dummies(feedback_features, columns=["volatility_category", "avg_volume_category", "trend"], drop_first=True)
+        # Preprocess features for prediction
+        liked_features = liked_coins.drop(columns=["liked", "coin", "timestamp", "close", "volume"])
+        unrated_features = unrated_coins.drop(columns=["liked", "coin", "timestamp", "close", "volume"])
 
-        # Align features with the model's training data
-        trained_features = self.model.feature_names_in_
-        feedback_features = feedback_features.reindex(columns=trained_features, fill_value=0)
+        liked_features = pd.get_dummies(liked_features, columns=["volatility_category", "avg_volume_category", "trend"], drop_first=True)
+        unrated_features = pd.get_dummies(unrated_features, columns=["volatility_category", "avg_volume_category", "trend"], drop_first=True)
 
-        predictions = self.model.predict_proba(feedback_features)[:, 1]
-        feedback_data["score"] = predictions
+        # Align columns in case features mismatch
+        liked_features, unrated_features = liked_features.align(unrated_features, fill_value=0, axis=1)
 
-        recommended_coins = feedback_data.sort_values(by="score", ascending=False)["coin"].tolist()
+        # Predict probabilities for unrated coins
+        unrated_coins["recommendation_score"] = self.model.predict_proba(unrated_features)[:, 1]
+
+        # Sort by recommendation score and filter out already-liked/disliked coins
+        recommended_coins = unrated_coins.sort_values(by="recommendation_score", ascending=False)["coin"].tolist()
         print(f"Recommended coins: {recommended_coins[:5]}")
+
         return recommended_coins[:5]
 
 
