@@ -1,10 +1,24 @@
 import streamlit as st
 
+# In this section, we gather all the text elements that the user will see in the landing page.
+#Precisely, there are different sections that explain, respectively, the following:
+# - the overall goal and functionality of the application;
+# - what a candlestick chart is (this is very useful for users who are not very experienced in trading);
+# - a section dedicated to briefly explain the machine learning approach used in the app, alongside
+#   the supported coins;
+# - finally, the limitations of the machine learning model in dealing with manually added coins, 
+#   in relation to feedback constraints as well as to the refresh of data (which refers to the need of 
+#   synchronizing regularly the 'processed_data.csv` file)
+
 def show_landing_page():
     """
     This function renders the landing page of the application.
     """
-    # Title and Introduction
+    # Title and introduction
+    # in the following lines, as well as in other instances of the code where it applies,
+    #we use the '##' to make the words right after correspond to a second level header (in case 
+    #there were three '###', it would be a third level header).
+    # The '**' will make the text appear in bold
     st.title("Welcome to Easy2Trade!")
     st.markdown("""
     ## Quick Overview
@@ -17,7 +31,7 @@ def show_landing_page():
     - **Track Coins**: Manage your custom watchlist and set your own thresholds for alerts.
     """)
 
-    # Candlestick Chart Explanation
+    # Candlestick chart explanation: basic notions needed to comprehend what a candlestick chart is
     st.markdown("""
     ## Understanding Candlestick Charts
     Candlestick charts represent the price movement of a cryptocurrency over a specific timeframe.
@@ -35,7 +49,7 @@ def show_landing_page():
     """)
     st.image("candlestick_example.jpg", caption="Example of a Candlestick Chart (Source: https://learn.bybit.com/candlestick/best-candlestick-patterns/)")
 
-    # Technical Details Section
+    # Section with technical details about the machine learning part
     st.markdown("""
     ## Technical Details
     Easy2Trade uses a **Machine Learning (ML) Model** to provide personalized recommendations based on user feedback. 
@@ -48,7 +62,7 @@ def show_landing_page():
     3. **Prediction of Unrated Coins**: The ML model calculates scores for unrated coins and ranks them for suggestions.
     """)
 
-    # Supported Coins for ML Recommendations
+    # Now we list the coins that are supported for the ML Recommendations
     st.markdown("""
     ## Supported Coins for Recommendations
     The following coins are currently supported for the recommendation algorithm:
@@ -62,15 +76,15 @@ def show_landing_page():
     **robin.grob@student.unisg.ch**
     """)
 
-    # Limitations Section
+    # Limitations (of the machine learning part) Section
     st.markdown("""
     ## Limitations
     - **Manually Added Coins**: Coins added manually (not in the initial dataset) are not considered by the recommendation algorithm.
     - **Feedback Constraints**: The model relies on sufficient user feedback to make accurate predictions.
-    - **Data Refresh**: Ensure the `processed_data.csv` file is synchronized regularly for the best results.
+    - **Refresh of Data**: Ensure the `processed_data.csv` file is synchronized regularly for the best results.
     """)
 
-    # Footer
+    # Footer of the landing page
     st.markdown("---")
     st.markdown("""
     #### Easy2Trade - Developed as part of a group project. 
