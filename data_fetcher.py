@@ -127,7 +127,7 @@ def categorize_all_data():
         if file.endswith(".csv"):
             categorize_features(os.path.join(DATA_DIR, file))
 
-#we ensure that the code is executed as main program
+#we ensure that the code below is executed only if the script is run directly/as a main program
 if __name__ == "__main__":
     fetch_all_data()
     categorize_all_data()
