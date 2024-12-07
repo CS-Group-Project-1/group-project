@@ -22,7 +22,7 @@ def synchronize_with_processed_data(feedback_data, processed_file):
     if os.path.exists(processed_file):
         processed_data = pd.read_csv(processed_file) #if the path exists, the file is read into a dataframe
         # Update the "liked" column in processed_data based on feedback
-        processed_data["coin_base"] = processed_data["coin"].str.replace("USDT", "", regex=False).str.strip()
+        processed_data["coin_base"] = processed_data["coin"].str.replace("USDT", "", regex=False).str.strip() #setting regex to false ensures treatment as a literal string
         for _, row in feedback_data.iterrows(): #we use '_' as a placeholder when iterating over the rows of the feedback data
             coin = row["coin"]
             liked = row["liked"]
