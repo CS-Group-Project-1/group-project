@@ -5,7 +5,8 @@ import requests
 from utils import fetch_historical_data, calculate_percentage_change, plot_candlestick
 
 #This file contains the elements that build the 'COIN SEARCH' page of the application.
-#It includes, to illustrate buttons to add or remove the coin, to kickstart the analysis, as well as
+#It includes, to illustrate buttons to add or remove the coin, to kickstart the analysis and the buttons to
+# like or dislike a coin (relevant also for our machine learnong approach), as well as
 #the function that will allow us to display the graph defined in utils.
 #A relevant observation is that this file's first function is in great part almost identical to the function 
 # #with the same name present in the file 'tracked_coins_page.py' (to precise, we write the definition
