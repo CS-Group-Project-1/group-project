@@ -253,4 +253,4 @@ def show_tracked_coins_page():
     # Display the success message after running the price check
     if "price_check_success_message" in st.session_state:
         st.success(st.session_state["price_check_success_message"])
-        del st.session_state["price_check_success_message"]  # Clear the message after displaying
+        del st.session_state["price_check_success_message"]  # We clear the message after displaying
