@@ -144,6 +144,6 @@ def monitor_prices():
         save_tracked_coins(tracked_coins)
         print(f"Removed the following coins from the tracking list: {', '.join(coins_to_remove)}")
 
-#we make sure that the monitor_prices() function is run when executed directly, and not when it is imported in other scripts (-->ensure reusability)
+#we make sure that the monitor_prices() function is run when executed directly to guarantee its modularity
 if __name__ == "__main__":
     monitor_prices()
