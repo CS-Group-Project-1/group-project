@@ -6,15 +6,26 @@ import requests
 import os
 from email_credentials import SMTP_EMAIL, SMTP_PASSWORD  # Import email credentials from the separate file 
 
+#This file tackles the functionality that allows to send an email when the percentage threshold is met
+#In extent, it loads (and then saves) the tracked coins and the preferences of the user for notification
+#Then, it fetches the coin price, which will then be analyzed extensively through the 'monitor_prices()' 
+# function, which also implements the mechanisms necessary to check whether the percentage thershold has been
+# met and, if that is the case, to send an email notification to the user. The coins for which a notification
+# has been sent are then removed from tracking.
+
+
+#first, we define which files contain the data regarding tracked coins and the user's notification preferences
 TRACKED_COINS_FILE = "tracked_coins.csv"
 NOTIFICATION_PREF_FILE = "notification_preferences.csv"
 
+#url that we will use to make a request to the API
 API_URL = "https://api.binance.com/api/v3/ticker/price"
 
+#to send the email, we need to state that we will use the gmail server
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
-
+#defining the function that will send the email
 def send_email(to_email, subject, body):
     """Send an email notification."""
     try:
@@ -26,15 +37,15 @@ def send_email(to_email, subject, body):
         # Email body
         msg.attach(MIMEText(body, "plain"))
 
-        # Connect to the email server and send the email
+        # Connect to the email server and send the email; OBSERVATION: asked ChatGPT insights on how we could connect to the server and then send the email
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
             server.login(SMTP_EMAIL, SMTP_PASSWORD)
             server.send_message(msg)
 
         print(f"Email sent to {to_email}")
-    except Exception as e:
-        print(f"Failed to send email: {e}")
+    except Exception as e: #block of code after try is executed unless there's an exception, i.e. unless an error exists
+        print(f"Failed to send email: {e}") #format string allows to dynamically see what the error is
 
 
 def load_tracked_coins():
@@ -127,7 +138,7 @@ def monitor_prices():
             # Mark the coin for removal after notification by adding it to the dedicated list
             coins_to_remove.append(coin)
 
-    # Remove from the tracking list coins for which a notification was received 
+    # We remove from the tracking list coins for which a notification was received 
     if coins_to_remove:
         tracked_coins = tracked_coins[~tracked_coins["coin"].isin(coins_to_remove)] #here we asked again ChatGPT how we could filter the 'tracked_coins' dataframe so that the function excludes rows where the coin is in the 'coins_to_remove' list. 
         save_tracked_coins(tracked_coins)
