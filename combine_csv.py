@@ -51,7 +51,7 @@ def combine_csv_files_with_liked_column(input_folder, output_file):
     combined_df.to_csv(output_file, index=False)
     print(f"Combined CSV file saved to: {output_file}")
 
-#we ensure that the code is executed as a main program 
+#we ensure that the code below is executed only if the script is run directly/as a main program 
 if __name__ == "__main__":
     # Specify the input folder and output file
     input_folder = "data"  # Folder where individual CSV files are stored
