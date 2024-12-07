@@ -6,10 +6,15 @@ from price_checker import monitor_prices  # Import the monitor_prices function f
 
 #this file contains crucial elements that will be part of the TRACKED COINS PAGE on the app. 
 #First, it circles back to some functions already handled in the price_checker.py file (more precisely,
-#it defines analogous functions in certain situations). After that, a function that will save the user's
-#preferred way of receiving notifications is defined. We then implement another function that contains
-#all necessary elements that will be displayed in the app's tracked coins page (more detailed comments will
-#follow directly nearby the function).
+#it defines analogous functions in certain situations). This file's first function is in great part almost identical
+# to the function with the same name present in the file coin_search.py (to precise, we write the definition
+# of said function in both scripts for convenience-related reasons; indeed, this way we were able to handle
+# the logic of the scripts in an optimal way, furthermore being able to adjust some aspects of the 
+# function according to the needs of the specific script if needed; lastly, we observe that we used the same
+# names, once again, for clarity and convenience).
+# After that, a function that will save the user's preferred way of receiving notifications is defined. 
+# We then implement another function that contains all necessary elements that will be displayed 
+# in the app's tracked coins page (more detailed comments willfollow directly nearby the function).
 
 # Paths for saving tracked coins and user preferences
 TRACKED_COINS_FILE = "tracked_coins.csv"
@@ -25,14 +30,17 @@ def fetch_binance_symbols():
         response = requests.get("https://api.binance.com/api/v3/exchangeInfo")
         response.raise_for_status() #helps to handle HTTP errors
         data = response.json() #formatting with json
+        # We filter the API response and keep only symbols ending with 'USDT' in order to fetch coins
         symbols = [symbol["symbol"][:-4] for symbol in data["symbols"] if symbol["symbol"].endswith("USDT")]
-        return list(set(symbols))
+        return list(set(symbols)) #we use 'set' to remove duplicates
     except Exception: #unless there's an exception, i.e. mistake, the code after 'try...' is executed
         st.error("Failed to fetch Binance symbols. Please try again later.") #in this case, we raise a streamlit error in case an exception is encountered
         return [] #if exception happens, the returned list is empty
 
-#when defining the symbols variable, we use '.endswith' because we only want symbols that entail a processed 
-# pair in a form analogous to, for example,'BTCUSDT' (we do not want any other ending that differs from 'USDT')
+#We provide an explanation of the list comprehension used for the definition of the symbols variable;
+#this same explanation is also given in the 'coin_serach.py' file
+# #when defining the symbols variable, we use '.endswith' because we only want symbols that entail a processed 
+# pair in a form analogous to, for example,'BTCUSDT' (we do not want any other ending that differs from 'USDT');
 #however, we then do not want USDT to remain visible in the symbol of the coin. This is why we use 
 #slicing ('[:-4]') to remove the last 4 characters of all the strings. Coming back to the previous example,
 #slicing would let us go from 'BTCUSDT' to 'BTC'
