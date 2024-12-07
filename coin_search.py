@@ -258,57 +258,57 @@ def show_coin_search():
         # Logic of the like button 
         if col1.button("👍 Like"):
             if st.session_state["last_action"] == "like":
-                st.warning(f"You have already liked {selected_coin} in this search session!")
+                st.warning(f"You have already liked {selected_coin} in this search session!") #check whether the user already liked the coin
             else:
-                # Ensure that start_value is preserved and valid
+                # Ensure that start_value is preserved and valid, which applies if the analysis  of the coin was already made
                 if st.session_state["start_value"] is None:
                     st.error("Analyze the coin first before providing feedback!")
                 else:
-                    start_value = st.session_state["start_value"]  # Fixed starting value
+                    start_value = st.session_state["start_value"]  # Fixed starting value by setting it to the intial "liked" value for the coin initialized in session state
 
                     # Compute current_value based on start_value
-                    if st.session_state["last_action"] == "dislike":  # Switch from dislike to like
-                        current_value = start_value + 1
-                    elif start_value + 1 == 0:  # Avoid hitting zero
+                    if st.session_state["last_action"] == "dislike":  # Switch from dislike to like in case the user previously disliked the coin in question
+                        current_value = start_value + 1 
+                    elif start_value + 1 == 0:  # Avoid hitting zero (relevant for preventing mistakes)
                         current_value = start_value + 2
                     else:  # Normal like
-                        current_value = start_value + 1
+                        current_value = start_value + 1 #we indicate a new like by adding 1 to the starting value
 
-                    # Safeguard: prevent zero recalculation errors
+                    # Safeguard: prevent zero recalculation errors; we add this additonal safeguard since it is very important that 0 is never hit
                     if current_value == 0:
                         current_value = start_value + 2
 
                     # Update the feedback data
-                    feedback_data.loc[feedback_data["coin"] == selected_coin, "liked"] = current_value
-                    save_feedback_data()
+                    feedback_data.loc[feedback_data["coin"] == selected_coin, "liked"] = current_value #we filter the dataframe to find the rows where the coin column corresponds 
+                    save_feedback_data()                                                               #to the selected coin; we then assign the 'current_value' to the "liked" column
                     st.success(f"{selected_coin} liked!")
                     st.session_state["last_action"] = "like"  # Record the action
 
-        # Logic of the dislike button 
+        # Logic of the dislike button (there are various analogies with the logic of the like button)
         if col2.button("👎 Dislike"):
             if st.session_state["last_action"] == "dislike":
                 st.warning(f"You have already disliked {selected_coin} in this search session!")
             else:
-                # Ensure start_value is preserved and valid
+                # Ensure start_value is preserved and valid (as explained before, for this to apply the analysis needs to have been done)
                 if st.session_state["start_value"] is None:
                     st.error("Analyze the coin first before providing feedback!")
                 else:
-                    start_value = st.session_state["start_value"]  # Fixed starting value
+                    start_value = st.session_state["start_value"]  # Again, we set a fixed starting value
 
                     # Compute current_value based on start_value
-                    if st.session_state["last_action"] == "like":  # Switch from like to dislike
+                    if st.session_state["last_action"] == "like":  # Switch from like to dislike in case the coin was previously liked by the user
                         current_value = start_value - 1
-                    elif start_value - 1 == 0:  # Avoid hitting zero
+                    elif start_value - 1 == 0:  # Avoid hitting zero (relevant for preventing mistakes)
                         current_value = start_value - 2
                     else:  # Normal dislike
-                        current_value = start_value - 1
+                        current_value = start_value - 1 #dislikes are represented by a -1
 
-                    # Safeguard: prevent zero recalculation errors
+                    # Safeguard: prevent zero recalculation errors; we add this condition because it's very important not to hit 0
                     if current_value == 0:
-                        current_value = start_value - 2
+                        current_value = start_value - 2 #now we have -2 because for the dislikes we want to have negative values
 
                     # Update the feedback data
-                    feedback_data.loc[feedback_data["coin"] == selected_coin, "liked"] = current_value
+                    feedback_data.loc[feedback_data["coin"] == selected_coin, "liked"] = current_value #again, we filter the dataframe
                     save_feedback_data()
                     st.error(f"{selected_coin} disliked!")
                     st.session_state["last_action"] = "dislike"  # Record the action
