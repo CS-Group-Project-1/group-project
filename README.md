@@ -1,4 +1,15 @@
 # group-project
+
+
+
+
+The following paragraphs explain the process that the user would have to follow in order to set up the
+notification system. However, for the scope of our project we already created the file
+email_credentials.py and inserted there an email address created specifically for the project with the
+correlated password. Thus, the following paragraphs are here for an informative scope, but 
+the process explained DOES NOT HAVE TO BE EXECUTED AGAIN.
+
+
 Setting Up Email Notifications
 
 This project uses Gmail to send email notifications when tracked coin prices meet the specified thresholds. To ensure the system works correctly, the user will need to create an email_credentials.py file and configure Gmail to generate an app-specific password. Follow these steps:
