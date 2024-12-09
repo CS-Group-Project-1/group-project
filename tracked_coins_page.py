@@ -4,7 +4,7 @@ import os
 import requests
 from price_checker import monitor_prices  # Import the monitor_prices function from the price checker file
 
-#this file contains crucial elements that will be part of the TRACKED COINS PAGE on the app. 
+#this file contains crucial elements that will be part of the TRACKED COINS (& notification) page on the app. 
 #First, it circles back to some functions already handled in the price_checker.py file (more precisely,
 #it defines analogous functions in certain situations). This file's first function is in great part almost identical
 # to the function with the same name present in the file coin_search.py (to precise, we write the definition
