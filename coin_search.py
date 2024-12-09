@@ -5,11 +5,13 @@ import requests
 from utils import fetch_historical_data, calculate_percentage_change, plot_candlestick
 
 #This file contains the elements that build the 'COIN SEARCH' page of the application.
-#It includes, to illustrate buttons to add or remove the coin, to kickstart the analysis and the buttons to
-# like or dislike a coin (relevant also for our machine learnong approach), as well as
-#the function that will allow us to display the graph defined in utils.
+#It allows the user to select a coin to track, as well as criteria such as the time interval for the analysis
+# and the percentage change threshold. Also buttons to add or remove the coin as well as to kickstart the 
+#analysis are included. Another crucial element part of this page is the function that will display the
+#candlestick graph that was elaborated in the 'utils.py' file. Finally, the user will be able to 
+#like and dislike the coin (which is crucial in relation to our machine learning approach).
 #A relevant observation is that this file's first function is in great part almost identical to the function 
-# #with the same name present in the file 'tracked_coins_page.py' (to precise, we write the definition
+#with the same name present in the file 'tracked_coins_page.py' (to precise, we write the definition
 # of said function in both scripts for convenience-related reasons; indeed, this way we were able to handle
 # the logic of the scripts in an optimal way, furthermore being able to adjust some aspects of the 
 # function according to the needs of the specific script if needed; lastly, we observe that we used the same
@@ -36,7 +38,7 @@ def fetch_binance_symbols():
         # file; in that case, what is returned is an empty list)
 
 #We provide an explanation of the list comprehension used for the definition of the symbols variable;
-#this same explanation is also given in the 'coin_serach.py' file
+#this same explanation is also given in the 'tracked_coins_page.py' file
 # #when defining the symbols variable, we use '.endswith' because we only want symbols that entail a processed 
 # pair in a form analogous to, for example,'BTCUSDT' (we do not want any other ending that differs from 'USDT');
 #however, we then do not want USDT to remain visible in the symbol of the coin. This is why we use 
