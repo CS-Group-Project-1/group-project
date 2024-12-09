@@ -3,11 +3,13 @@ import pandas as pd
 import os
 from recommendation_section import show_recommendations, synchronize_with_processed_data
 
-#With this file, we want to show the app's FEEDBACK AND SYNCHRONIZATION page.
+#With this file, we want to show the app's FEEDBACK AND RECOMMENDATIONS page.
 #Crucial elements for the management of the feedback are implemented, such as buttons that
 #allow the user to remove the coin from the liked / disliked coins. Crucially,
 #the user can also see the feedback given to the coins, i.e. the liked and disliked coins are displayed.
-#Further elements handled in this script relate principally to data synchronization
+#Crucially, this page also shows the coins that the user might like based on their expressed preference,
+#i.e. it shows the recommendations for coins based on the feedback given by the user.
+#Further elements handled in this script relate principally to data synchronization.
 
 #we define the function that will concretely display the page in question
 def show_feedback_page():
