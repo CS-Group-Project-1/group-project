@@ -6,3 +6,5 @@
 SMTP_EMAIL = "easy2trade1@gmail.com"  
 SMTP_PASSWORD = "jhnc mjmc srrt ictx" 
  
+#As mentioned in the README file, users could also use an email of their choice to implement the 
+#email notification system. 
