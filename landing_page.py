@@ -19,11 +19,27 @@ def show_landing_page():
     #we use the '##' to make the words right after correspond to a second level header (in case 
     #there were three '###', it would be a third level header).
     # The '**' will make the text appear in bold
-    st.title("Welcome to Easy2Trade!")
+    st.title("Easy2Trade")
+    st.header("Where Trading Research Speeds Up Faster Than Your Coffee Cools Down")
     st.markdown("""
     ## Quick Overview
     Easy2Trade is your go-to tool for analyzing cryptocurrency trends, tracking coins, 
     and receiving personalized recommendations based on your preferences.
+    
+    ### The Problem
+    Navigating the world of cryptocurrency can be overwhelming, especially for beginners 
+    and casual investors. With hundreds of coins, complex charts, and ever-changing trends, 
+    it’s hard to know where to start, which coins to track, or how to make informed decisions 
+    without extensive research and expertise. 
+                
+    ### The Solution
+    Easy2Trade simplifies cryptocurrency analysis and empowers users to make smarter decisions. 
+    By offering an intuitive platform, it allows you to:
+    - Analyze coin performance with candlestick charts and clear metrics.
+    - Receive personalized recommendations tailored to your preferences through our machine learning model.
+    - Stay on top of the market by tracking coins and setting custom alerts. Whether you’re a beginner exploring crypto 
+    or an enthusiast looking to refine your strategy, Easy2Trade provides the tools and insights you need to navigate 
+    the crypto world with confidence and ease.
     
     ### Key Features:
     - **Search and Analyze Coins**: Evaluate coin performance using candlestick charts and metrics.
@@ -48,6 +64,16 @@ def show_landing_page():
     Below is a visual explanation of a candlestick structure:
     """)
     st.image("candlestick_example.jpg", caption="Example of a Candlestick Chart (Source: https://learn.bybit.com/candlestick/best-candlestick-patterns/)")
+
+    #Explanation of the percentage threshold
+    st.markdown("""
+    ## Understanding Percentage Thresholds 
+    The percentage threshold is a customizable alert setting that notifies you 
+    when a cryptocurrency’s price changes by a specific percentage. 
+    For example, if you set a 5% threshold, you’ll be alerted when the coin’s price rises or falls 
+    by a percentage greater or equal to 5%. 
+    This helps you stay informed about significant market movements without constantly monitoring the charts.
+    """)
 
     # Section with technical details about the machine learning part
     st.markdown("""
