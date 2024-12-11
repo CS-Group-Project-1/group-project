@@ -40,8 +40,19 @@ Apart from the py files, the project also contains other files essential for the
 -data folder: contains the csv files of the different types of coins, relevant in different steps of the app;
 -gitignore: in order to prevent the exposition of sensitive email data
 
+Additionally, the project's zip naturally also contains, as per the project guidelines, the video and the contribution matrix.
 
 
+LIST OF SUPPLEMENTARY AIDS
+
+In the code:
+-ChatGPT: we used this tool in different parts of the code and in a variety of ways. The specific usage
+of ChatGPT is documented in extreme detail in all the lines of code concerned.
+
+In the video:
+-ChatGPT: used to generate the featured images
+-ElevenLabs: used to generate the voices
+-Premiere Pro: used for the editing
 
 
 
