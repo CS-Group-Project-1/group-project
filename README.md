@@ -29,7 +29,7 @@ In brief, it tackles the functionality that allows to send an email when the spe
 
 -recommendation_section.py: contains crucial functions needed to display the recommendation section; the elements defined in this file will then be the crucial building pieces of the FEEDBACK AND RECOMMENDATIONS page explained above.
 
--tracked_coins_page.py: contains the elements for the TRACKED COINS & NOTIFICATION page of the app; the user will be able to manage the tracked coins and the email notification preferences. The email functionality of the app entails, as briefly mentioned before, sending an email notification to the user when the specific percentage threshold is met.
+-tracked_coins_page.py: contains the elements for the TRACKED COINS & NOTIFICATION page of the app; the user will be able to manage the tracked coins and the email notification preferences. The email functionality of the app entails, as briefly mentioned before, sending an email notification to the user when the specific percentage threshold is met. IMPORTANT OBSERVATION: during the testing of the application, we noticed that the email notifications sometimes ended in the spam of the user; i.e., the spam folder might have to be checked.
 
 -utils.py: contains various functions that we classified as utils; these functions complete a specific task that is then needed in other parts of the scripts/files. In detail, the file contains a function that interacts with the Binance API in order to fetch the data about the historical prices of coins, another function that calculates the percentage change in the price of coins, and finally a function that allows us to create the candlestick graph for the coin in question (to create the graph, we use the plotly library).
 
@@ -56,9 +56,9 @@ the process explained DOES NOT HAVE TO BE EXECUTED AGAIN.
 
 Setting Up Email Notifications; ONLY FOR INFORMATIVE PURPOSES, THIS PROCESS DOES NOT HAVE TO BE EXECUTED AGAIN
 
-This project uses Gmail to send email notifications when tracked coin prices meet the specified thresholds. To ensure the system works correctly, the user will need to create an email_credentials.py file and configure Gmail to generate an app-specific password. Follow these steps:
+This project uses Gmail to send email notifications when tracked coin prices meet the specified thresholds. To ensure the system works correctly, the user will need to create an email_credentials.py file and configure Gmail to generate an app-specific password. The necessary steps to setup the email notifications system are the following:
 
-Step 1: Create the email_credentials.py File
+STEP 1: Create the email_credentials.py File
 In the root directory of the project, create a new Python file named email_credentials.py.
 Add the following code to the file and replace the placeholders with your Gmail address and the generated app password:
 
@@ -67,15 +67,15 @@ SMTP_PASSWORD = "your_app_password"  # Later, replace with the app password from
 
 Important: Do not commit this file to version control. Make sure it's added to your .gitignore file to prevent exposing your credentials.
 
-Step 2: Generate an App Password in Gmail
-To ensure secure access, Gmail requires an app-specific password for third-party applications. Follow these steps to generate one:
+STEP 2: Generate an App Password in Gmail
+To ensure secure access, Gmail requires an app-specific password for third-party applications. You can generate one by doing the following:
 
 Enable 2-Step Verification:
 Go to Google My Account Security.
 Scroll down to "Signing in to Google" and enable 2-Step Verification if it's not already enabled.
-Generate an App Password:
 
-After enabling 2-Step Verification, return to the Security page in your Google account.
+Generate an App Password:
+After having enabled 2-Step Verification, return to the Security page in your Google account.
 Scroll to "Signing in to Google" and select App Passwords.
 Under "Select the app and device you want to generate the app password for," choose:
 -App: Select Mail.
@@ -86,10 +86,10 @@ Under "Select the app and device you want to generate the app password for," cho
 Replace "your_app_password" in the email_credentials.py file with the generated app password.
 
 
-Step 3: Verify the Setup
-In case there's a need to ensure that the email_credentials.py file is properly configured with your Gmail address and app password.
+STEP 3: Verify the Setup
+Follow this step in case there's a need to ensure that the email_credentials.py file is properly configured with your Gmail address and app password.
 Run the application and add a coin to track with a threshold.
-Trigger the "Run Price Check Now" button to test if notifications are sent to the specified email.
+Trigger the "Run Price Check Now" button in the application's tracked coins page to test if notifications are sent to the specified email.
  
  Finally, we briefly address some possible errors that could arise. Namely, we shortly focus on troubleshooting:
 -SMTP Authentication Error: Ensure the Gmail address and app password in email_credentials.py are correct.
